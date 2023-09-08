@@ -14,6 +14,7 @@ from bson.decimal128 import Decimal128
 from decimal import Decimal
 from decimal import Decimal, ROUND_HALF_UP, ROUND_HALF_DOWN
 import locale
+from tqdm import tqdm
 app = Flask(__name__)
 CORS(app)
 
