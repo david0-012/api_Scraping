@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Scraping API</title>
+    <link rel="shortcut icon" type="image/x-icon" href="imagen/cohete.png">
+    <style>
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: hsl(0, 0%, 95%);
+        }
+        th:nth-child(1), td:nth-child(1) {
+            width: 20%;
+        }
+        th:nth-child(2), td:nth-child(2) {
+            width: 10%;
+        }
+        th:nth-child(3), td:nth-child(3) {
+            width: 15%;
+        }
+
+        /* Estilos para los botones */
+        #search-btn {
+            background-color: green; /* Color verde bonito */
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        #sort-by-opinions {
+            background-color: blue; /* Color azul bonito */
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            display: none; /* Inicialmente oculto */
+        }
+
+        #back-to-results {
+            background: linear-gradient(135deg, rgba(255,0,0,0.7) 0%, rgba(255,0,0,0.7) 100%); /* Color rojo difuminado */
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            display: none; /* Inicialmente oculto */
+        }
+
+        /* Contenedor para los botones */
+        .button-container {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+
+        /* Estilo para el botón de búsqueda */
+        #search-form {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        #search-btn {
+            background-color: green;
+        }
+    </style>
+</head>
+<body>
+    <h1>Búsqueda de Productos</h1>
+    <form id="search-form">
+        <input type="text" id="keyword" name="keyword">
+        <button type="submit" id="search-btn">Buscar</button>
+    </form>
+
+    <div class="button-container" id="button-container">
+        <button id="sort-by-opinions">Ordenar por Opiniones</button>
+        <button id="back-to-results">Volver</button>
+    </div>
+
+    <div id="results"></div>
+
+    <script>
+        const form = document.getElementById("search-form");
+        const resultsDiv = document.getElementById("results");
+        const sortByOpinionsBtn = document.getElementById("sort-by-opinions");
+        const backToResultsBtn = document.getElementById("back-to-results");
+        const buttonContainer = document.getElementById("button-container");
+        let originalResults; // Variable para almacenar los resultados originales
+
+        form.addEventListener("submit", async function(event) {
+            event.preventDefault();
+            const keywords = document.getElementById("keyword").value;
+            const apiKey = 'tu_clave_secreta'; // Reemplaza con tu clave secreta
+            const response = await fetch(`http://localhost:5000/scrape?keywords=${keywords}`, {
+                method: 'GET',
+                headers: {
+                    'Api-Key': apiKey
+                }
+            });
+
+            if (response.status === 401) {
+                alert('Acceso no autorizado. Verifica la clave del servicio.');
+                return;
+            }
+
+            const data = await response.json();
+
+            // Almacenar los resultados originales
+            originalResults = data;
+
+            // Construye el HTML de la tabla de resultados
+            let tableHTML = "<h2>Resultados:</h2><table>";
+            tableHTML += "<thead><tr><th>Título</th><th>Precio</th><th>Calificación</th></tr></thead>";
+            tableHTML += "<tbody>";
+
+            data.titles.forEach((title, index) => {
+                tableHTML += `<tr><td><a href="${data.links[index]}" target="_blank">${title}</a></td><td>${data.prices[index]}</td><td>${data.qualifications[index]}</td></tr>`;
+            });
+
+            tableHTML += "</tbody></table>";
+
+            // Actualiza el área de resultados en la página
+            resultsDiv.innerHTML = tableHTML;
+
+            // Muestra los botones después de obtener los resultados
+            sortByOpinionsBtn.style.display = "block";
+            backToResultsBtn.style.display = "block";
+        });
+
+        sortByOpinionsBtn.addEventListener("click", function() {
+            // Obtener la tabla y su cuerpo
+            const table = document.querySelector("table");
+            const tbody = table.querySelector("tbody");
+
+            // Obtener todas las filas de la tabla
+            const rows = Array.from(tbody.querySelectorAll("tr"));
+
+            // Ordenar las filas por calificación en orden descendente
+            rows.sort((a, b) => {
+                const ratingA = parseFloat(a.querySelector("td:nth-child(3)").textContent);
+                const ratingB = parseFloat(b.querySelector("td:nth-child(3)").textContent);
+
+                if (isNaN(ratingA)) return 1;
+                if (isNaN(ratingB)) return -1;
+                return ratingB - ratingA;
+            });
+
+            // Vaciar el cuerpo de la tabla
+            tbody.innerHTML = "";
+
+            // Volver a agregar las filas ordenadas al cuerpo de la tabla
+            rows.forEach(row => {
+                tbody.appendChild(row);
+            });
+        });
+
+        // Agregar evento de clic para el botón "Volver"
+        backToResultsBtn.addEventListener("click", function() {
+            // Restaurar los resultados originales
+            if (originalResults) {
+                let tableHTML = "<h2>Resultados:</h2><table>";
+                tableHTML += "<thead><tr><th>Título</th><th>Precio</th><th>Calificación</th></tr></thead>";
+                tableHTML += "<tbody>";
+
+                originalResults.titles.forEach((title, index) => {
+                    tableHTML += `<tr><td><a href="${originalResults.links[index]}" target="_blank">${title}</a></td><td>${originalResults.prices[index]}</td><td>${originalResults.qualifications[index]}</td></tr>`;
+                });
+
+                tableHTML += "</tbody></table>";
+
+                // Actualiza el área de resultados en la página con los resultados originales
+                resultsDiv.innerHTML = tableHTML;
+            }
+        });
+    </script>
+</body>
+</html>
