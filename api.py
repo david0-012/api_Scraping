@@ -26,6 +26,10 @@ def validate_service_key(api_key):
     valid_key = "tu_clave_secreta"
     return api_key == valid_key
 
+@app.route('/')
+def hello_world():
+    return 'Hello, World!'
+
 @app.route('/scrape', methods=['GET'])
 def scrape():
     # Validar la clave del servicio
