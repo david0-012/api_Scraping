@@ -38,7 +38,7 @@ def scrape():
 
     resp = requests.get(url)
     resp = resp.text
-    soup = bs.BeautifulSoup(resp, 'lxml')
+    soup = BeautifulSoup(resp, 'html.parser')  # Cambio del analizador a 'html.parser'
     table = soup.find('section', {'class': 'ui-search-results ui-search-results--without-disclaimer shops__search-results'})
 
     titles = []
@@ -124,7 +124,7 @@ def get_prices():
 
     resp = requests.get(url)
     resp = resp.text
-    soup = bs.BeautifulSoup(resp, 'lxml')
+    soup = BeautifulSoup(resp, 'html.parser')  # Cambio del analizador a 'html.parser'
     table = soup.find('section', {'class': 'ui-search-results ui-search-results--without-disclaimer shops__search-results'})
 
     prices = []
@@ -219,8 +219,6 @@ def query_data():
         return jsonify(filtered_data)
     except Exception as e:
         return jsonify({"error": f"Error al consultar datos: {str(e)}"}), 500
-
-
 
 @app.route('/stats', methods=['GET'])
 def get_statistics():
